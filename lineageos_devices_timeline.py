@@ -32,13 +32,13 @@ header = """
 <thead>
     <tr>
         <th></th>
-        <th>Type</th>
         <th>Brand</th>
         <th>Model</th>
         <th>Codename</th>
         <th>Release Date</th>
-        <th>Versions</th>
+        <th>Supported Versions</th>
         <th>Status</th>
+        <th>Type</th>
     </tr>
 </thead>
 """
@@ -47,13 +47,13 @@ header = """
 table_data = "<tbody>" + "\n".join([f"""
         <tr>
         <td><img loading='lazy' width='50' src='https://wiki.lineageos.org/images/devices/{data['codename']}.png' alt=''/></td>
-        <td>{data['type']}</td>
         <td>{data['brand']}</td>
         <td><a href='https://wiki.lineageos.org/devices/{data['codename']}'>{data['model']}</a></td>
         <td>{data['codename']}</td>
         <td>{data['release_date']}</td>
         <td>{', '.join(data['versions'])}</td>
         <td>{'Maintained' if len(data['maintainers']) > 0 else 'Not maintained'}</td>
+        <td>{data['type']}</td>
         </tr>
     """ for data in sorted_list_data]) + "</tbody>\n"
 
