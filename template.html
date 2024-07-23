@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LineageOS devices by release date</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #009879;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f3f3f3;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        td {
+            border-bottom: 1px solid #dddddd;
+        }
+        .update-note {
+            text-align: right;
+            color: #555;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lineage OS devices by release date</h1>
+    <table>
+        ${header}
+        ${table_data}
+    </table>
+        <div class="update-note">
+        Last updated on: ${date_update}
+    </div>
+</body>
+</html>
+
