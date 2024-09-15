@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LineageOS devices by release date</title>
+    <title>LineageOS Devices by Release Date</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,10 +20,12 @@
             border-collapse: collapse;
             margin: 20px 0;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow-x: auto; /* Allows horizontal scroll on small screens */
         }
         th, td {
             padding: 12px 15px;
             text-align: left;
+            word-wrap: break-word; /* Allows long words to break and fit in cells */
         }
         th {
             background-color: #167c80;
@@ -39,17 +41,30 @@
         td {
             border-bottom: 1px solid #dddddd;
         }
-        .update-note {
-            text-align: right;
+        .update-note, .source-code {
+            text-align: center;
             color: #555;
             font-size: 0.9em;
             margin-top: 10px;
         }
-        .source-code {
-            text-align: right;
-            color: #111;
-            font-size: 0.9em;
-            margin-top: 10px;
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.9em; /* Adjust font size on smaller screens */
+            }
+            th, td {
+                padding: 8px 10px; /* Adjust padding on smaller screens */
+            }
+        }
+        @media (max-width: 480px) {
+            table {
+                font-size: 0.8em; /* Further adjust font size on very small screens */
+            }
+            th, td {
+                padding: 6px 8px; /* Further adjust padding on very small screens */
+            }
+            .update-note, .source-code {
+                font-size: 0.8em; /* Adjust font size of notes on very small screens */
+            }
         }
     </style>
 </head>
@@ -2970,7 +2985,7 @@
         <td>DRG</td>
         <td>2018-08-30</td>
         <td>18.1, 19.1, 20, 21</td>
-        <td>Maintained</td>
+        <td>Not maintained</td>
         <td>Phone</td>
         </tr>
     
@@ -7177,7 +7192,7 @@
 
     </table>
         <div class="update-note">
-        Last updated on: 2024-09-09
+        Last updated on: 2024-09-15
         </div>
         <div class="source-code">
         <a href="https://github.com/dbeley/lineageos-devices-timeline">Source code</a> 
