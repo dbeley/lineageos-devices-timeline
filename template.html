@@ -15,22 +15,80 @@
             text-align: center;
             color: #333;
         }
+        .filters {
+            max-width: 1400px;
+            margin: 0 auto 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .filter-group {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            margin-right: 5px;
+            display: inline-block;
+            min-width: 100px;
+        }
+        .filter-group input,
+        .filter-group select {
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .stats {
+            max-width: 1400px;
+            margin: 0 auto 20px;
+            padding: 10px;
+            background-color: #e8f4f5;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+        }
         table {
             width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
             border-collapse: collapse;
-            margin: 20px 0;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            overflow-x: auto; /* Allows horizontal scroll on small screens */
+            background-color: #fff;
+            overflow-x: auto;
         }
         th, td {
             padding: 12px 15px;
             text-align: left;
-            word-wrap: break-word; /* Allows long words to break and fit in cells */
+            word-wrap: break-word;
         }
         th {
             background-color: #167c80;
             color: #ffffff;
             font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            white-space: nowrap;
+        }
+        th:hover {
+            background-color: #135f63;
+        }
+        th::after {
+            content: ' ⇅';
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
+        th.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+        th.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
         }
         tr:nth-child(even) {
             background-color: #f3f3f3;
@@ -49,37 +107,252 @@
         }
         @media (max-width: 768px) {
             table {
-                font-size: 0.9em; /* Adjust font size on smaller screens */
+                font-size: 0.9em;
             }
             th, td {
-                padding: 8px 10px; /* Adjust padding on smaller screens */
+                padding: 8px 10px;
+            }
+            .filter-group {
+                display: block;
+                margin-bottom: 10px;
             }
         }
         @media (max-width: 480px) {
             table {
-                font-size: 0.8em; /* Further adjust font size on very small screens */
+                font-size: 0.8em;
             }
             th, td {
-                padding: 6px 8px; /* Further adjust padding on very small screens */
+                padding: 6px 8px;
             }
             .update-note, .source-code {
-                font-size: 0.8em; /* Adjust font size of notes on very small screens */
+                font-size: 0.8em;
             }
         }
     </style>
 </head>
 <body>
     <h1>Lineage OS devices by release date</h1>
-    <table>
+    
+    <div class="filters">
+        <div class="filter-group">
+            <label for="searchInput">Search:</label>
+            <input type="text" id="searchInput" placeholder="Brand, model, codename...">
+        </div>
+        <div class="filter-group">
+            <label for="typeFilter">Type:</label>
+            <select id="typeFilter">
+                <option value="">All</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="versionFilter">Version:</label>
+            <select id="versionFilter">
+                <option value="">All</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="statusFilter">Status:</label>
+            <select id="statusFilter">
+                <option value="">All</option>
+                <option value="Maintained">Maintained</option>
+                <option value="Not maintained">Not maintained</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="brandFilter">Brand:</label>
+            <select id="brandFilter">
+                <option value="">All</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <span id="statsText">Showing all devices</span>
+    </div>
+    
+    <table id="devicesTable">
         ${header}
         ${table_data}
     </table>
-        <div class="update-note">
+    
+    <div class="update-note">
         Last updated on: ${date_update}
-        </div>
-        <div class="source-code">
+    </div>
+    <div class="source-code">
         <a href="https://github.com/dbeley/lineageos-devices-timeline">Source code</a> 
-        </div>
+    </div>
+
+    <script>
+        // Table sorting and filtering functionality
+        const table = document.getElementById('devicesTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const searchInput = document.getElementById('searchInput');
+        const typeFilter = document.getElementById('typeFilter');
+        const versionFilter = document.getElementById('versionFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const brandFilter = document.getElementById('brandFilter');
+        const statsText = document.getElementById('statsText');
+        
+        let sortColumn = -1;
+        let sortAscending = true;
+        
+        // Populate filter dropdowns
+        function populateFilters() {
+            const types = new Set();
+            const versions = new Set();
+            const brands = new Set();
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells[1]) brands.add(cells[1].textContent.trim());
+                if (cells[7]) types.add(cells[7].textContent.trim());
+                if (cells[5]) {
+                    const versionText = cells[5].textContent.trim();
+                    versionText.split(',').forEach(v => {
+                        const trimmed = v.trim();
+                        if (trimmed) versions.add(trimmed);
+                    });
+                }
+            });
+            
+            [brandFilter, typeFilter, versionFilter].forEach(select => {
+                const currentValue = select.value;
+                while (select.options.length > 1) select.remove(1);
+            });
+            
+            Array.from(brands).sort().forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                brandFilter.appendChild(option);
+            });
+            
+            Array.from(types).sort().forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeFilter.appendChild(option);
+            });
+            
+            Array.from(versions).sort((a, b) => {
+                const numA = parseFloat(a);
+                const numB = parseFloat(b);
+                return numB - numA;
+            }).forEach(version => {
+                const option = document.createElement('option');
+                option.value = version;
+                option.textContent = version;
+                versionFilter.appendChild(option);
+            });
+        }
+        
+        // Filter table rows
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const typeValue = typeFilter.value;
+            const versionValue = versionFilter.value;
+            const statusValue = statusFilter.value;
+            const brandValue = brandFilter.value;
+            
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const brand = cells[1] ? cells[1].textContent.toLowerCase() : '';
+                const model = cells[2] ? cells[2].textContent.toLowerCase() : '';
+                const codename = cells[3] ? cells[3].textContent.toLowerCase() : '';
+                const soc = cells[13] ? cells[13].textContent.toLowerCase() : '';
+                const versions = cells[5] ? cells[5].textContent : '';
+                const status = cells[6] ? cells[6].textContent : '';
+                const type = cells[7] ? cells[7].textContent : '';
+                
+                const matchesSearch = !searchTerm || 
+                    brand.includes(searchTerm) || 
+                    model.includes(searchTerm) || 
+                    codename.includes(searchTerm) ||
+                    soc.includes(searchTerm);
+                
+                const matchesType = !typeValue || type === typeValue;
+                const matchesVersion = !versionValue || versions.includes(versionValue);
+                const matchesStatus = !statusValue || status === statusValue;
+                const matchesBrand = !brandValue || (cells[1] && cells[1].textContent === brandValue);
+                
+                if (matchesSearch && matchesType && matchesVersion && matchesStatus && matchesBrand) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            updateStats(visibleCount);
+        }
+        
+        // Update statistics
+        function updateStats(visibleCount) {
+            const totalCount = rows.length;
+            if (visibleCount === totalCount) {
+                statsText.textContent = `Showing all ${totalCount} devices`;
+            } else {
+                statsText.textContent = `Showing ${visibleCount} of ${totalCount} devices`;
+            }
+        }
+        
+        // Sort table
+        function sortTable(columnIndex) {
+            if (sortColumn === columnIndex) {
+                sortAscending = !sortAscending;
+            } else {
+                sortColumn = columnIndex;
+                sortAscending = true;
+            }
+            
+            // Update header styling
+            table.querySelectorAll('th').forEach((th, index) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (index === columnIndex) {
+                    th.classList.add(sortAscending ? 'sort-asc' : 'sort-desc');
+                }
+            });
+            
+            const sortedRows = rows.slice().sort((a, b) => {
+                const cellA = a.querySelectorAll('td')[columnIndex].textContent.trim();
+                const cellB = b.querySelectorAll('td')[columnIndex].textContent.trim();
+                
+                // Try to parse as numbers for numeric sorting
+                const numA = parseFloat(cellA);
+                const numB = parseFloat(cellB);
+                
+                let comparison = 0;
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    comparison = numA - numB;
+                } else {
+                    comparison = cellA.localeCompare(cellB);
+                }
+                
+                return sortAscending ? comparison : -comparison;
+            });
+            
+            sortedRows.forEach(row => tbody.appendChild(row));
+        }
+        
+        // Add click handlers to table headers
+        table.querySelectorAll('th').forEach((th, index) => {
+            th.addEventListener('click', () => sortTable(index));
+        });
+        
+        // Add event listeners for filters
+        searchInput.addEventListener('input', filterTable);
+        typeFilter.addEventListener('change', filterTable);
+        versionFilter.addEventListener('change', filterTable);
+        statusFilter.addEventListener('change', filterTable);
+        brandFilter.addEventListener('change', filterTable);
+        
+        // Initialize
+        populateFilters();
+        updateStats(rows.length);
+    </script>
 </body>
 </html>
 

@@ -16,6 +16,23 @@ for index, file in enumerate(list_files, 1):
 
     formatted_release_date = list(data.get('release')[0].values())[0] if isinstance(data.get('release'), list) else data.get('release')
     formatted_data = f"{data.get('type')} - {data.get('vendor')} - {data.get('name')} ({formatted_release_date})"
+    
+    # Extract battery capacity
+    battery_data = data.get("battery", {})
+    battery_capacity = battery_data.get("capacity", "") if isinstance(battery_data, dict) else ""
+    
+    # Extract screen data
+    screen_data = data.get("screen", {})
+    screen_size = screen_data.get("size", "") if isinstance(screen_data, dict) else ""
+    screen_resolution = screen_data.get("resolution", "") if isinstance(screen_data, dict) else ""
+    
+    # Extract RAM and Storage
+    ram = data.get("ram", "")
+    storage = data.get("storage", "")
+    
+    # Extract SoC
+    soc = data.get("soc", "")
+    
     list_data.append({
                          "type": data.get("type").title(),
                          "brand": data.get("vendor"),
@@ -24,6 +41,12 @@ for index, file in enumerate(list_files, 1):
                          "versions": [str(x) for x in data.get("versions")],
                          "maintainers": data.get("maintainers"),
                          "codename": data.get("codename"),
+                         "battery_capacity": str(battery_capacity) if battery_capacity else "",
+                         "screen_size": str(screen_size) if screen_size else "",
+                         "screen_resolution": screen_resolution if screen_resolution else "",
+                         "ram": ram if ram else "",
+                         "storage": storage if storage else "",
+                         "soc": soc if soc else "",
                      })
 
 sorted_list_data = sorted(list_data, key=lambda x: (x['release_date'], x['brand'], x['model']), reverse=True)
@@ -39,6 +62,12 @@ header = """
         <th>Supported Versions</th>
         <th>Status</th>
         <th>Type</th>
+        <th>Screen Size</th>
+        <th>Screen Resolution</th>
+        <th>Battery (mAh)</th>
+        <th>RAM</th>
+        <th>Storage</th>
+        <th>SoC</th>
     </tr>
 </thead>
 """
@@ -54,6 +83,12 @@ table_data = "<tbody>" + "\n".join([f"""
         <td>{', '.join(data['versions'])}</td>
         <td>{'Maintained' if len(data['maintainers']) > 0 else 'Not maintained'}</td>
         <td>{data['type']}</td>
+        <td>{data['screen_size'] + '"' if data['screen_size'] else ''}</td>
+        <td>{data['screen_resolution']}</td>
+        <td>{data['battery_capacity']}</td>
+        <td>{data['ram']}</td>
+        <td>{data['storage']}</td>
+        <td>{data['soc']}</td>
         </tr>
     """ for data in sorted_list_data]) + "</tbody>\n"
 
