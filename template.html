@@ -32,6 +32,26 @@
             color: #ffffff;
             font-weight: bold;
         }
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        th.sortable:hover {
+            background-color: #1a9499;
+        }
+        th.sortable::after {
+            content: ' \2195';
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
+        th.sortable.asc::after {
+            content: ' \2191';
+            opacity: 1;
+        }
+        th.sortable.desc::after {
+            content: ' \2193';
+            opacity: 1;
+        }
         tr:nth-child(even) {
             background-color: #f3f3f3;
         }
@@ -69,7 +89,7 @@
     </style>
 </head>
 <body>
-    <h1>Lineage OS devices by release date</h1>
+    <h1>LineageOS devices by release date</h1>
     <table>
         ${header}
         ${table_data}
@@ -80,6 +100,62 @@
         <div class="source-code">
         <a href="https://github.com/dbeley/lineageos-devices-timeline">Source code</a> 
         </div>
+    <script>
+        (function() {
+            var table = document.querySelector('table');
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            var headers = Array.from(table.querySelectorAll('th.sortable'));
+            var currentSort = { column: null, asc: false };
+
+            function getCellValue(row, colIndex) {
+                return row.children[colIndex].textContent.trim();
+            }
+
+            function sortTable(colIndex, asc) {
+                var sortedRows = rows.sort(function(a, b) {
+                    var aVal = getCellValue(a, colIndex);
+                    var bVal = getCellValue(b, colIndex);
+                    if (aVal === 'Unknown') aVal = '0000-00-00';
+                    if (bVal === 'Unknown') bVal = '0000-00-00';
+                    if (!isNaN(aVal) && !isNaN(bVal)) {
+                        return asc ? aVal - bVal : bVal - aVal;
+                    }
+                    return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                });
+                sortedRows.forEach(function(row) { tbody.appendChild(row); });
+            }
+
+            headers.forEach(function(th) {
+                th.addEventListener('click', function() {
+                    var colIndex = Array.from(this.parentNode.children).indexOf(this);
+                    var column = this.getAttribute('data-column');
+                    var asc = true;
+
+                    if (currentSort.column === column) {
+                        asc = !currentSort.asc;
+                    } else if (this.hasAttribute('data-default-sort')) {
+                        asc = this.getAttribute('data-default-sort') === 'asc';
+                    }
+
+                    headers.forEach(function(h) { h.classList.remove('asc', 'desc'); });
+                    this.classList.add(asc ? 'asc' : 'desc');
+
+                    sortTable(colIndex, asc);
+                    currentSort = { column: column, asc: asc };
+                });
+            });
+
+            var defaultHeader = table.querySelector('th[data-default-sort]');
+            if (defaultHeader) {
+                var colIndex = Array.from(defaultHeader.parentNode.children).indexOf(defaultHeader);
+                var asc = defaultHeader.getAttribute('data-default-sort') === 'asc';
+                defaultHeader.classList.add(asc ? 'asc' : 'desc');
+                sortTable(colIndex, asc);
+                currentSort = { column: defaultHeader.getAttribute('data-column'), asc: asc };
+            }
+        })();
+    </script>
 </body>
 </html>
 
