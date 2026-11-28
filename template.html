@@ -61,11 +61,14 @@
         td {
             border-bottom: 1px solid #dddddd;
         }
-        .update-note, .source-code {
+        .page-meta {
             text-align: center;
             color: #555;
             font-size: 0.9em;
-            margin-top: 10px;
+            margin: -10px 0 0 0;
+        }
+        .page-meta div {
+            margin-bottom: 4px;
         }
         @media (max-width: 768px) {
             table {
@@ -82,7 +85,7 @@
             th, td {
                 padding: 6px 8px; /* Further adjust padding on very small screens */
             }
-            .update-note, .source-code {
+            .page-meta {
                 font-size: 0.8em; /* Adjust font size of notes on very small screens */
             }
         }
@@ -90,16 +93,18 @@
 </head>
 <body>
     <h1>LineageOS devices by release date</h1>
-    <table>
-        ${header}
-        ${table_data}
-    </table>
+    <div class="page-meta">
         <div class="update-note">
         Last updated on: ${date_update}
         </div>
         <div class="source-code">
-        <a href="https://github.com/dbeley/lineageos-devices-timeline">Source code</a> 
+        <a href="https://github.com/dbeley/lineageos-devices-timeline">Source code</a>
         </div>
+    </div>
+    <table>
+        ${header}
+        ${table_data}
+    </table>
     <script>
         (function() {
             var table = document.querySelector('table');
